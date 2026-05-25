@@ -1,0 +1,990 @@
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  ChevronDown,
+  Eye,
+  KeyRound,
+  Mail,
+  MonitorUp,
+  Play,
+  Settings,
+  Square,
+  UserPen,
+  UserPlus,
+  X,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = "https://ycyfpuoxuosiuzkfncxq.supabase.co";
+const supabaseAnonKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljeWZwdW94dW9zaXV6a2ZuY3hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2Mjk2ODIsImV4cCI6MjA5NTIwNTY4Mn0.WxNlseiNdJwFa4TzpRrRHeSI9pKulfesNwnZpChS-IA";
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+const logoSrc =
+  "data:image/svg+xml,%3Csvg width='128' height='128' viewBox='0 0 128 128' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M27 25C23 21 16 24 18 30L31 84C33 92 42 95 49 90L78 69C84 65 84 56 78 52L27 25Z' fill='%23B487EA'/%3E%3Crect x='48' y='60' width='34' height='8' rx='4' fill='%235B21B6'/%3E%3Cpath d='M76 74C82 72.5 85.5 69 87 63C88.5 69 92 72.5 98 74C92 75.5 88.5 79 87 85C85.5 79 82 75.5 76 74Z' fill='%237C1DFF'/%3E%3C/svg%3E";
+
+const blockedKeywordsByLanguage = {
+  en: [
+    "password", "passcode", "pin", "otp", "2fa", "verification code", "credit card", "card number", "cvv", "bank account", "wire transfer", "payment", "paypal", "crypto", "wallet", "seed phrase", "private key", "api key", "token", "secret key", "login", "sign in", "delete file", "erase", "format disk", "factory reset", "buy", "purchase", "checkout"
+  ],
+  it: [
+    "password", "parola d'ordine", "codice pin", "pin", "otp", "codice di verifica", "codice a due fattori", "carta di credito", "numero carta", "cvv", "conto bancario", "iban", "bonifico", "pagamento", "paypal", "crypto", "wallet", "frase seed", "chiave privata", "chiave api", "token", "login", "accesso", "elimina file", "cancella file", "formatta", "ripristino di fabbrica", "compra", "acquista", "checkout"
+  ],
+  es: [
+    "contraseña", "clave", "pin", "otp", "código de verificación", "código de dos factores", "tarjeta de crédito", "número de tarjeta", "cvv", "cuenta bancaria", "iban", "transferencia bancaria", "pago", "paypal", "cripto", "billetera", "frase semilla", "clave privada", "clave api", "token", "inicio de sesión", "eliminar archivo", "borrar archivo", "formatear", "restablecimiento de fábrica", "comprar", "pagar"
+  ],
+  fr: [
+    "mot de passe", "code pin", "pin", "otp", "code de vérification", "code à deux facteurs", "carte de crédit", "numéro de carte", "cvv", "compte bancaire", "iban", "virement bancaire", "paiement", "paypal", "crypto", "portefeuille", "phrase seed", "clé privée", "clé api", "token", "connexion", "supprimer fichier", "effacer fichier", "formater", "réinitialisation usine", "acheter", "paiement"
+  ],
+};
+
+const fallbackModels = [
+  {
+    id: "openrouter/free",
+    name: "Auto Free Router",
+    description: "Automatically picks an available free model",
+  },
+];
+
+const speedOptions = [
+  { name: "Fast", description: "Lowest latency responses" },
+  { name: "Moderate", description: "Balanced speed and quality" },
+  { name: "Slow", description: "Best reasoning and accuracy" },
+];
+
+const languages = [
+  { code: "en", name: "English" },
+  { code: "it", name: "Italiano" },
+  { code: "es", name: "Español" },
+  { code: "fr", name: "Français" },
+];
+
+const text = {
+  en: {
+    subtitle: "Safe screen control with confirmation before every action.",
+    account: "Account",
+    createAccount: "Create account",
+    login: "Login",
+    logout: "Logout",
+    authSuccess: "Authentication successful.",
+    verificationSent: "Verification code sent to your email.",
+    verificationPlaceholder: "Enter the 8-digit verification code",
+    verify: "Verify",
+    accountSettings: "Account settings",
+    changeName: "Change username",
+    changeEmail: "Change email",
+    changePassword: "Change password",
+    contactSupport: "Contact support",
+    supportDescription: "Get help from the Aether AI team.",
+    confirmationEmail: "A confirmation email has been sent.",
+    authError: "Authentication failed.",
+    settings: "Settings",
+    sharedScreen: "Shared screen",
+    live: "Live",
+    idle: "Idle",
+    noScreen: "No shared screen",
+    shareScreen: "Share screen",
+    stop: "Stop",
+    prompt: "Prompt",
+    placeholder: "Describe what Aether should do...",
+    model: "Model",
+    speed: "AI Speed",
+    start: "Start",
+    sensitive: "Sensitive request detected.",
+    ready: "Ready to help.",
+    guestModelsLocked: "Login required to unlock all AI models.",
+    guestTimeLimit: "Guest screen sharing is limited to 5 minutes.",
+    writePrompt: "Write a prompt first.",
+    shareFirst: "Share your screen first.",
+    screenActive: "Screen sharing is active.",
+    screenEnded: "Screen sharing ended.",
+    screenStopped: "Screen sharing stopped.",
+    screenDenied: "Screen permission denied or unavailable.",
+    blocked: "Blocked: sensitive or risky request detected.",
+    accountTitle: "Create account",
+    accountSub: "Save your preferences and AI setup.",
+    name: "Choose a username",
+    email: "Enter your email address",
+    password: "No password needed. A secure login code will be sent to your email.",
+    create: "Create",
+    settingsTitle: "Settings",
+    language: "Language",
+    footer: "Made with <3 from the Aether AI Dev",
+  },
+  it: {
+    subtitle: "Controllo schermo sicuro con conferma prima di ogni azione.",
+    account: "Account",
+    createAccount: "Crea account",
+    login: "Accedi",
+    logout: "Esci",
+    authSuccess: "Accesso riuscito.",
+    verificationSent: "Codice di verifica inviato via email.",
+    verificationPlaceholder: "Inserisci il codice di verifica a 8 cifre",
+    verify: "Verifica",
+    accountSettings: "Impostazioni account",
+    changeName: "Cambia nome utente",
+    changeEmail: "Cambia email",
+    changePassword: "Cambia password",
+    contactSupport: "Contatta il supporto",
+    supportDescription: "Ricevi aiuto dal team di Aether AI.",
+    confirmationEmail: "Email di conferma inviata.",
+    authError: "Autenticazione fallita.",
+    settings: "Impostazioni",
+    sharedScreen: "Schermo condiviso",
+    live: "Live",
+    idle: "Inattivo",
+    noScreen: "Nessuno schermo condiviso",
+    shareScreen: "Condividi schermo",
+    stop: "Ferma",
+    prompt: "Prompt",
+    placeholder: "Descrivi cosa deve fare Aether...",
+    model: "Modello",
+    speed: "Velocità AI",
+    start: "Avvia",
+    sensitive: "Richiesta sensibile rilevata.",
+    ready: "Pronto ad aiutarti.",
+    guestModelsLocked: "Accedi per sbloccare tutti i modelli AI.",
+    guestTimeLimit: "La condivisione schermo guest è limitata a 5 minuti.",
+    writePrompt: "Scrivi prima un prompt.",
+    shareFirst: "Condividi prima lo schermo.",
+    screenActive: "Condivisione schermo attiva.",
+    screenEnded: "Condivisione schermo terminata.",
+    screenStopped: "Condivisione schermo fermata.",
+    screenDenied: "Permesso schermo negato o non disponibile.",
+    blocked: "Bloccato: richiesta sensibile o rischiosa rilevata.",
+    accountTitle: "Crea account",
+    accountSub: "Salva preferenze e configurazione AI.",
+    name: "Scegli un nome utente",
+    email: "Inserisci la tua email",
+    password: "Nessuna password necessaria. Riceverai un codice sicuro via email.",
+    create: "Crea",
+    settingsTitle: "Impostazioni",
+    language: "Lingua",
+    footer: "Made with <3 from the Aether AI Dev",
+  },
+  es: {
+    subtitle: "Control seguro de pantalla con confirmación antes de cada acción.",
+    account: "Cuenta",
+    createAccount: "Crear cuenta",
+    login: "Iniciar sesión",
+    logout: "Salir",
+    authSuccess: "Autenticación correcta.",
+    verificationSent: "Código enviado a tu email.",
+    verificationPlaceholder: "Introduce el código de 8 dígitos",
+    verify: "Verificar",
+    accountSettings: "Ajustes de cuenta",
+    changeName: "Cambiar usuario",
+    changeEmail: "Cambiar email",
+    changePassword: "Cambiar contraseña",
+    contactSupport: "Contactar soporte",
+    supportDescription: "Obtén ayuda del equipo de Aether AI.",
+    confirmationEmail: "Se ha enviado un email de confirmación.",
+    authError: "Autenticación fallida.",
+    settings: "Ajustes",
+    sharedScreen: "Pantalla compartida",
+    live: "En vivo",
+    idle: "Inactivo",
+    noScreen: "No hay pantalla compartida",
+    shareScreen: "Compartir pantalla",
+    stop: "Detener",
+    prompt: "Prompt",
+    placeholder: "Describe qué debe hacer Aether...",
+    model: "Modelo",
+    speed: "Velocidad AI",
+    start: "Iniciar",
+    sensitive: "Solicitud sensible detectada.",
+    ready: "Listo para ayudar.",
+    guestModelsLocked: "Inicia sesión para desbloquear todos los modelos AI.",
+    guestTimeLimit: "La pantalla compartida para invitados está limitada a 5 minutos.",
+    writePrompt: "Escribe un prompt primero.",
+    shareFirst: "Comparte tu pantalla primero.",
+    screenActive: "Pantalla compartida activa.",
+    screenEnded: "Pantalla compartida finalizada.",
+    screenStopped: "Pantalla compartida detenida.",
+    screenDenied: "Permiso de pantalla denegado o no disponible.",
+    blocked: "Bloqueado: solicitud sensible o riesgosa detectada.",
+    accountTitle: "Crear cuenta",
+    accountSub: "Guarda tus preferencias y configuración AI.",
+    name: "Elige un nombre de usuario",
+    email: "Introduce tu correo electrónico",
+    password: "No necesitas contraseña. Recibirás un código seguro por email.",
+    create: "Crear",
+    settingsTitle: "Ajustes",
+    language: "Idioma",
+    footer: "Made with <3 from the Aether AI Dev",
+  },
+  fr: {
+    subtitle: "Contrôle d'écran sécurisé avec confirmation avant chaque action.",
+    account: "Compte",
+    createAccount: "Créer un compte",
+    login: "Connexion",
+    logout: "Déconnexion",
+    authSuccess: "Authentification réussie.",
+    verificationSent: "Code envoyé par email.",
+    verificationPlaceholder: "Entre le code de vérification à 8 chiffres",
+    verify: "Vérifier",
+    accountSettings: "Paramètres du compte",
+    changeName: "Changer le nom",
+    changeEmail: "Changer l'email",
+    changePassword: "Changer le mot de passe",
+    contactSupport: "Contacter le support",
+    supportDescription: "Obtiens de l'aide de l'équipe Aether AI.",
+    confirmationEmail: "Un email de confirmation a été envoyé.",
+    authError: "Authentification échouée.",
+    settings: "Paramètres",
+    sharedScreen: "Écran partagé",
+    live: "En direct",
+    idle: "Inactif",
+    noScreen: "Aucun écran partagé",
+    shareScreen: "Partager l'écran",
+    stop: "Arrêter",
+    prompt: "Prompt",
+    placeholder: "Décris ce qu'Aether doit faire...",
+    model: "Modèle",
+    speed: "Vitesse AI",
+    start: "Démarrer",
+    sensitive: "Demande sensible détectée.",
+    ready: "Prêt à aider.",
+    guestModelsLocked: "Connecte-toi pour débloquer tous les modèles AI.",
+    guestTimeLimit: "Le partage d'écran invité est limité à 5 minutes.",
+    writePrompt: "Écris d'abord un prompt.",
+    shareFirst: "Partage d'abord ton écran.",
+    screenActive: "Partage d'écran actif.",
+    screenEnded: "Partage d'écran terminé.",
+    screenStopped: "Partage d'écran arrêté.",
+    screenDenied: "Permission d'écran refusée ou indisponible.",
+    blocked: "Bloqué : demande sensible ou risquée détectée.",
+    accountTitle: "Créer un compte",
+    accountSub: "Enregistre tes préférences et ta configuration AI.",
+    name: "Choisis un nom d'utilisateur",
+    email: "Entre ton adresse email",
+    password: "Aucun mot de passe requis. Un code sécurisé sera envoyé par email.",
+    create: "Créer",
+    settingsTitle: "Paramètres",
+    language: "Langue",
+    footer: "Made with <3 from the Aether AI Dev",
+  },
+};
+
+function normalizePrompt(value) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9@._\s-]/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getAllBlockedKeywords() {
+  return Object.values(blockedKeywordsByLanguage).flat();
+}
+
+function isPromptBlocked(prompt) {
+  const normalizedPrompt = normalizePrompt(prompt);
+  return getAllBlockedKeywords().some((word) => normalizedPrompt.includes(normalizePrompt(word)));
+}
+
+async function askOpenRouterSafetyJudge(prompt, language) {
+  // Keep your OpenRouter API key on a server, never in this React frontend.
+  // Create a backend route like /api/moderate-prompt that calls OpenRouter with a Gemma model.
+  // Expected backend response: { blocked: true | false }
+  try {
+    const response = await fetch("/api/moderate-prompt", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt,
+        language,
+        preferredModel: "google/gemma-3-27b-it:free",
+      }),
+    });
+
+    if (!response.ok) return false;
+    const data = await response.json();
+    return Boolean(data.blocked);
+  } catch {
+    return false;
+  }
+}
+
+function formatModelDescription(model) {
+  const context = model?.context_length?.toLocaleString?.() || "Unknown";
+  const modality = model?.architecture?.modality || "text";
+  return `${context} context • ${modality}`;
+}
+
+function getFreeModels(data) {
+  if (!Array.isArray(data)) return fallbackModels;
+
+  const models = data
+    .filter((model) => {
+      const promptPrice = Number(model?.pricing?.prompt ?? 1);
+      const completionPrice = Number(model?.pricing?.completion ?? 1);
+      return model.id === "openrouter/free" || model.id?.endsWith(":free") || (promptPrice === 0 && completionPrice === 0);
+    })
+    .map((model) => ({
+      id: model.id,
+      name: model.name || model.id,
+      description: formatModelDescription(model),
+    }))
+    .sort((a, b) => {
+      if (a.id === "openrouter/free") return -1;
+      if (b.id === "openrouter/free") return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+  return models.length > 0 ? models : fallbackModels;
+}
+
+console.assert(isPromptBlocked("enter my password") === true, "Password prompts should be blocked");
+console.assert(isPromptBlocked("inserisci il mio codice di verifica") === true, "Italian verification codes should be blocked");
+console.assert(isPromptBlocked("paga con la mia carta di credito") === true, "Italian payment requests should be blocked");
+console.assert(isPromptBlocked("introduce mi contraseña") === true, "Spanish password prompts should be blocked");
+console.assert(isPromptBlocked("utilise mon mot de passe") === true, "French password prompts should be blocked");
+console.assert(isPromptBlocked("help me click the next button") === false, "Safe prompts should not be blocked");
+console.assert(getFreeModels([{ id: "x/free:free", pricing: { prompt: "0", completion: "0" } }]).length === 1, "Free models should be returned");
+console.assert(getFreeModels([{ id: "paid/model", pricing: { prompt: "1", completion: "1" } }])[0].id === "openrouter/free", "Fallback should be used when no free models exist");
+console.assert(text.en.verificationPlaceholder.includes("8"), "OTP placeholder should expect 8 digits");
+console.assert(languages.length === 4, "There should be 4 language options");
+
+const theme = {
+  page: "bg-neutral-50 text-neutral-950",
+  card: "border-neutral-200 bg-white text-neutral-950 shadow-sm",
+  muted: "text-neutral-500",
+  strong: "text-neutral-950",
+  input: "border-neutral-200 bg-neutral-50 text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:bg-white",
+};
+
+function Logo() {
+  return <img src={logoSrc} alt="Aether AI Logo" className="h-12 w-12 shrink-0 object-contain" />;
+}
+
+function Dropdown({ label, valueTitle, valueDescription, isOpen, onToggle, children }) {
+  return (
+    <div className="space-y-1">
+      <span className="text-xs font-medium uppercase tracking-wide text-neutral-400">{label}</span>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={onToggle}
+          className={`flex w-full items-center justify-between rounded-2xl border p-3 text-left transition ${theme.input}`}
+        >
+          <div>
+            <div className={`text-sm font-semibold ${theme.strong}`}>{valueTitle}</div>
+            <div className={`mt-0.5 text-xs ${theme.muted}`}>{valueDescription}</div>
+          </div>
+          <ChevronDown className={`transition ${isOpen ? "rotate-180" : ""} ${theme.muted}`} size={19} />
+        </button>
+
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 8, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.98 }}
+              className="absolute z-20 mt-2 max-h-72 w-full overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-1 shadow-xl"
+            >
+              {children}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+function Modal({ children }) {
+  return (
+    <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 16, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 16, scale: 0.98 }}
+        className="w-full max-w-md rounded-3xl border border-neutral-200 bg-white p-5 shadow-2xl"
+      >
+        {children}
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function ModalHeader({ title, subtitle, onClose }) {
+  return (
+    <div className="mb-4 flex items-start justify-between gap-4">
+      <div>
+        <h2 className="text-xl font-semibold">{title}</h2>
+        {subtitle && <p className={`mt-1 text-sm ${theme.muted}`}>{subtitle}</p>}
+      </div>
+      <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
+        <X size={18} />
+      </Button>
+    </div>
+  );
+}
+
+export default function App() {
+  const videoRef = useRef(null);
+  const guestTimeoutRef = useRef(null);
+  const [prompt, setPrompt] = useState("");
+  const [screenActive, setScreenActive] = useState(false);
+  const [aiActive, setAiActive] = useState(false);
+  const [modelMenuOpen, setModelMenuOpen] = useState(false);
+  const [speedMenuOpen, setSpeedMenuOpen] = useState(false);
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+  const [availableModels, setAvailableModels] = useState(fallbackModels);
+  const [selectedModel, setSelectedModel] = useState(fallbackModels[0]);
+  const [selectedSpeed, setSelectedSpeed] = useState(speedOptions[1]);
+  const [language, setLanguage] = useState("en");
+  const [user, setUser] = useState(null);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [accountActionOpen, setAccountActionOpen] = useState(false);
+  const [accountAction, setAccountAction] = useState(null);
+  const [accountActionValue, setAccountActionValue] = useState("");
+  const [authMode, setAuthMode] = useState("signup");
+  const [authName, setAuthName] = useState("");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+  const [verificationStep, setVerificationStep] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [message, setMessage] = useState("Ready to help.");
+  const [safetyChecking, setSafetyChecking] = useState(false);
+  const t = text[language];
+  const isBlocked = useMemo(() => isPromptBlocked(prompt), [prompt]);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null));
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadFreeModels() {
+      try {
+        const response = await fetch("https://openrouter.ai/api/v1/models");
+        const json = await response.json();
+        const freeModels = getFreeModels(json.data);
+        const filteredModels = user ? freeModels : [freeModels[0] || fallbackModels[0]];
+
+        if (!cancelled) {
+          setAvailableModels(filteredModels);
+          setSelectedModel((current) => (filteredModels.some((model) => model.id === current.id) ? current : filteredModels[0]));
+        }
+      } catch {
+        if (!cancelled) {
+          setAvailableModels(fallbackModels);
+          setSelectedModel(fallbackModels[0]);
+        }
+      }
+    }
+
+    loadFreeModels();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  function clearGuestTimer() {
+    if (guestTimeoutRef.current) {
+      clearTimeout(guestTimeoutRef.current);
+      guestTimeoutRef.current = null;
+    }
+  }
+
+  async function startScreenShare() {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      if (videoRef.current) videoRef.current.srcObject = stream;
+      setScreenActive(true);
+      setMessage(user ? t.screenActive : `${t.screenActive} ${t.guestTimeLimit}`);
+
+      if (!user) {
+        clearGuestTimer();
+        guestTimeoutRef.current = setTimeout(() => {
+          const activeStream = videoRef.current?.srcObject;
+          if (activeStream) activeStream.getTracks().forEach((track) => track.stop());
+          if (videoRef.current) videoRef.current.srcObject = null;
+          setScreenActive(false);
+          setAiActive(false);
+          setMessage(t.guestTimeLimit);
+        }, 5 * 60 * 1000);
+      }
+
+      stream.getVideoTracks()[0].onended = () => {
+        clearGuestTimer();
+        setScreenActive(false);
+        setAiActive(false);
+        setMessage(t.screenEnded);
+      };
+    } catch {
+      setMessage(t.screenDenied);
+    }
+  }
+
+  function stopScreenShare() {
+    const stream = videoRef.current?.srcObject;
+    if (stream) stream.getTracks().forEach((track) => track.stop());
+    if (videoRef.current) videoRef.current.srcObject = null;
+    clearGuestTimer();
+    setScreenActive(false);
+    setAiActive(false);
+    setMessage(t.screenStopped);
+  }
+
+  async function sendVerificationEmail(email) {
+    const result = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: authMode === "signup",
+        emailRedirectTo: window.location.origin,
+        data: authMode === "signup" ? { name: authName } : undefined,
+      },
+    });
+    if (result.error) throw result.error;
+  }
+
+  async function handleAuthSubmit() {
+    setAuthLoading(true);
+
+    if (!verificationStep) {
+      try {
+        await sendVerificationEmail(authEmail);
+        setVerificationStep(true);
+        setMessage(t.verificationSent);
+      } catch (error) {
+        setMessage(`${t.authError} ${error.message || ""}`.trim());
+      } finally {
+        setAuthLoading(false);
+      }
+      return;
+    }
+
+    try {
+      const result = await supabase.auth.verifyOtp({
+        email: authEmail,
+        token: verificationCode,
+        type: "email",
+      });
+      if (result.error) throw result.error;
+
+      setMessage(t.authSuccess);
+      setAccountOpen(false);
+      setAuthName("");
+      setAuthEmail("");
+      setVerificationCode("");
+      setVerificationStep(false);
+    } catch (error) {
+      setMessage(`${t.authError} ${error.message || ""}`.trim());
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    setUser(null);
+    setAccountSettingsOpen(false);
+    setMessage(t.ready);
+  }
+
+  function openAccountAction(action) {
+    setAccountAction(action);
+    setAccountActionValue("");
+    setAccountActionOpen(true);
+  }
+
+  async function handleAccountAction() {
+    if (!user || !accountAction) return;
+
+    try {
+      if (accountAction === "name") {
+        if (!accountActionValue.trim()) {
+          setMessage(language === "it" ? "Inserisci prima un nuovo nome utente." : "Enter a new username first.");
+          return;
+        }
+        const result = await supabase.auth.updateUser({ data: { name: accountActionValue.trim() } });
+        if (result.error) throw result.error;
+      }
+
+      if (accountAction === "email") {
+        if (!accountActionValue.trim()) {
+          setMessage(language === "it" ? "Inserisci prima una nuova email." : "Enter a new email first.");
+          return;
+        }
+        const result = await supabase.auth.updateUser({ email: accountActionValue.trim() });
+        if (result.error) throw result.error;
+      }
+
+      if (accountAction === "password") {
+        const result = await supabase.auth.resetPasswordForEmail(user.email, { redirectTo: window.location.origin });
+        if (result.error) throw result.error;
+      }
+
+      setMessage(t.confirmationEmail);
+      setAccountActionOpen(false);
+      setAccountActionValue("");
+      setAccountAction(null);
+    } catch (error) {
+      setMessage(`${t.authError} ${error.message || ""}`.trim());
+    }
+  }
+
+  async function startAI() {
+    if (!prompt.trim()) {
+      setMessage(t.writePrompt);
+      return;
+    }
+    if (!screenActive) {
+      setMessage(t.shareFirst);
+      return;
+    }
+    if (isBlocked) {
+      setAiActive(false);
+      setMessage(t.blocked);
+      return;
+    }
+
+    setSafetyChecking(true);
+    const openRouterBlocked = await askOpenRouterSafetyJudge(prompt, language);
+    setSafetyChecking(false);
+
+    if (openRouterBlocked) {
+      setAiActive(false);
+      setMessage(t.blocked);
+      return;
+    }
+    if (!user && selectedModel.id !== "openrouter/free") {
+      setMessage(t.guestModelsLocked);
+      return;
+    }
+
+    setAiActive(true);
+    setMessage(`Aether AI started with ${selectedModel.name} in ${selectedSpeed.name.toLowerCase()} mode.`);
+  }
+
+  function authMessageLooksLikeError() {
+    const lower = message.toLowerCase();
+    return lower.includes("failed") || lower.includes("fallita") || lower.includes("échouée") || lower.includes("fallida") || lower.includes("invalid") || lower.includes("expired");
+  }
+
+  return (
+    <main
+      className={`min-h-screen p-3 font-rounded md:p-5 ${theme.page}`}
+      style={{ fontFamily: "Inter, ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Rounded', sans-serif" }}
+    >
+      <div className="mx-auto max-w-6xl space-y-4 px-1 sm:px-0">
+        <motion.header
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`rounded-[1.75rem] border p-4 md:rounded-3xl md:p-5 ${theme.card}`}
+        >
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+            <div className="flex items-center gap-3">
+              <Logo />
+              <div>
+                <h1 className="text-4xl font-semibold tracking-tight md:text-4xl">Aether AI</h1>
+                <p className={`mt-1 text-sm ${theme.muted}`}>{t.subtitle}</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {user && (
+                <Button onClick={() => setAccountSettingsOpen(true)} variant="outline" size="icon" className="rounded-full">
+                  <UserPen size={17} />
+                </Button>
+              )}
+              {!user && (
+                <Button onClick={() => setAccountOpen(true)} variant="outline" className="rounded-full px-4">
+                  <UserPlus className="mr-2" size={17} /> {t.account}
+                </Button>
+              )}
+              <Button onClick={() => setSettingsOpen(true)} variant="outline" size="icon" className="rounded-full">
+                <Settings size={17} />
+              </Button>
+            </div>
+          </div>
+        </motion.header>
+
+        <div className="grid gap-4 lg:grid-cols-[1.35fr_0.9fr]">
+          <Card className={`rounded-[1.75rem] border md:rounded-3xl ${theme.card}`}>
+            <CardContent className="space-y-3 p-4 md:p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm font-medium text-neutral-700">
+                  <MonitorUp size={18} /> {t.sharedScreen}
+                </div>
+                <span className={`rounded-full px-3 py-1 text-xs ${screenActive ? "bg-emerald-100 text-emerald-700" : "bg-neutral-100 text-neutral-500"}`}>
+                  {screenActive ? t.live : t.idle}
+                </span>
+              </div>
+
+              <div className="relative aspect-video overflow-hidden rounded-[1.5rem] border border-black/10 bg-neutral-950">
+                <video ref={videoRef} autoPlay muted className="h-full w-full object-contain" />
+                {!screenActive && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-neutral-400">
+                    <div className="rounded-2xl bg-white/10 p-4 backdrop-blur">
+                      <Eye size={38} />
+                    </div>
+                    <p className="text-sm">{t.noScreen}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <Button onClick={startScreenShare} className="rounded-full px-5 max-sm:flex-1">
+                  <MonitorUp className="mr-2" size={17} /> {t.shareScreen}
+                </Button>
+                <Button onClick={stopScreenShare} variant="outline" className="rounded-full px-5 max-sm:flex-1">
+                  <Square className="mr-2" size={17} /> {t.stop}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className={`rounded-[1.75rem] border md:rounded-3xl ${theme.card}`}>
+            <CardContent className="space-y-3 p-4 md:p-4">
+              <label className="block space-y-1">
+                <span className="text-xs font-medium uppercase tracking-wide text-neutral-400">{t.prompt}</span>
+                <textarea
+                  value={prompt}
+                  onChange={(event) => setPrompt(event.target.value)}
+                  className={`min-h-28 w-full resize-none rounded-2xl border p-3 text-base outline-none transition md:min-h-24 md:text-sm ${theme.input}`}
+                  placeholder={t.placeholder}
+                />
+              </label>
+
+              {!user && (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
+                  {t.guestModelsLocked}
+                </div>
+              )}
+
+              <Dropdown
+                label={`${t.model} • ${availableModels.length}`}
+                valueTitle={selectedModel.name}
+                valueDescription={selectedModel.description}
+                isOpen={modelMenuOpen}
+                onToggle={() => {
+                  setModelMenuOpen((value) => !value);
+                  setSpeedMenuOpen(false);
+                }}
+              >
+                {availableModels.map((model) => (
+                  <button
+                    key={model.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedModel(model);
+                      setModelMenuOpen(false);
+                    }}
+                    className="w-full rounded-xl px-3 py-2 text-left transition hover:bg-neutral-100"
+                  >
+                    <div className={`text-sm font-semibold ${theme.strong}`}>{model.name}</div>
+                    <div className={`mt-0.5 text-xs ${theme.muted}`}>{model.description}</div>
+                  </button>
+                ))}
+              </Dropdown>
+
+              <Dropdown
+                label={t.speed}
+                valueTitle={selectedSpeed.name}
+                valueDescription={selectedSpeed.description}
+                isOpen={speedMenuOpen}
+                onToggle={() => {
+                  setSpeedMenuOpen((value) => !value);
+                  setModelMenuOpen(false);
+                }}
+              >
+                {speedOptions.map((speed) => (
+                  <button
+                    key={speed.name}
+                    type="button"
+                    onClick={() => {
+                      setSelectedSpeed(speed);
+                      setSpeedMenuOpen(false);
+                    }}
+                    className="w-full rounded-xl px-3 py-2 text-left transition hover:bg-neutral-100"
+                  >
+                    <div className={`text-sm font-semibold ${theme.strong}`}>{speed.name}</div>
+                    <div className={`mt-0.5 text-xs ${theme.muted}`}>{speed.description}</div>
+                  </button>
+                ))}
+              </Dropdown>
+
+              <Button onClick={startAI} className="w-full rounded-full py-5" disabled={isBlocked || safetyChecking}>
+                <Play className="mr-2" size={18} /> {safetyChecking ? "Checking..." : t.start}
+              </Button>
+
+              <p className={`rounded-2xl border px-3 py-2 text-center text-xs ${isBlocked ? "border-red-200 bg-red-50 text-red-500" : "border-neutral-200 bg-neutral-50 text-neutral-500"}`}>
+                {isBlocked ? t.sensitive : message}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="pt-2 text-center text-xs text-neutral-400">{t.footer}</div>
+
+        <AnimatePresence>
+          {accountOpen && (
+            <Modal>
+              <ModalHeader title={authMode === "signup" ? t.accountTitle : t.login} subtitle={t.accountSub} onClose={() => setAccountOpen(false)} />
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2 rounded-2xl bg-neutral-100 p-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode("signup");
+                      setVerificationStep(false);
+                    }}
+                    className={`rounded-xl px-4 py-2 text-sm font-medium transition ${authMode === "signup" ? "bg-white shadow-sm" : "text-neutral-500"}`}
+                  >
+                    {t.createAccount}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode("login");
+                      setVerificationStep(false);
+                    }}
+                    className={`rounded-xl px-4 py-2 text-sm font-medium transition ${authMode === "login" ? "bg-white shadow-sm" : "text-neutral-500"}`}
+                  >
+                    {t.login}
+                  </button>
+                </div>
+
+                {authMode === "signup" && (
+                  <input
+                    value={authName}
+                    onChange={(event) => setAuthName(event.target.value)}
+                    className={`w-full rounded-2xl border p-3 text-sm outline-none ${theme.input}`}
+                    placeholder={t.name}
+                  />
+                )}
+
+                <input
+                  value={authEmail}
+                  onChange={(event) => setAuthEmail(event.target.value)}
+                  className={`w-full rounded-2xl border p-3 text-sm outline-none ${theme.input}`}
+                  placeholder={t.email}
+                  type="email"
+                />
+
+                <p className="px-1 text-xs leading-relaxed text-neutral-500">{t.password}</p>
+
+                {verificationStep && (
+                  <input
+                    value={verificationCode}
+                    onChange={(event) => setVerificationCode(event.target.value)}
+                    className={`w-full rounded-2xl border p-3 text-sm outline-none ${theme.input}`}
+                    placeholder={t.verificationPlaceholder}
+                  />
+                )}
+
+                <Button className="w-full rounded-full py-5" onClick={handleAuthSubmit} disabled={authLoading || !authEmail || (verificationStep && verificationCode.length !== 8)}>
+                  {authLoading ? "..." : authMode === "signup" ? t.create : t.login}
+                </Button>
+
+                {message && (
+                  <p className={`rounded-2xl border px-3 py-2 text-center text-xs ${authMessageLooksLikeError() ? "border-red-200 bg-red-50 text-red-500" : "border-neutral-200 bg-neutral-50 text-neutral-500"}`}>
+                    {message}
+                  </p>
+                )}
+              </div>
+            </Modal>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {accountSettingsOpen && (
+            <Modal>
+              <ModalHeader title={t.accountSettings} subtitle={user?.email} onClose={() => setAccountSettingsOpen(false)} />
+              <div className="grid gap-2">
+                <Button variant="outline" className="justify-start rounded-2xl py-6" onClick={() => openAccountAction("name")}>
+                  <UserPen className="mr-2" size={18} /> {t.changeName}
+                </Button>
+                <Button variant="outline" className="justify-start rounded-2xl py-6" onClick={() => openAccountAction("email")}>
+                  <Mail className="mr-2" size={18} /> {t.changeEmail}
+                </Button>
+                <Button variant="outline" className="justify-start rounded-2xl py-6" onClick={() => openAccountAction("password")}>
+                  <KeyRound className="mr-2" size={18} /> {t.changePassword}
+                </Button>
+                <Button variant="outline" className="justify-start rounded-2xl py-6" onClick={() => (window.location.href = "mailto:support@aetherai.app")}>
+                  <Mail className="mr-2" size={18} />
+                  <div className="flex flex-col items-start">
+                    <span>{t.contactSupport}</span>
+                    <span className="text-xs text-neutral-500">{t.supportDescription}</span>
+                  </div>
+                </Button>
+                <Button variant="destructive" className="justify-start rounded-2xl py-6" onClick={handleLogout}>
+                  <Square className="mr-2" size={18} /> {t.logout}
+                </Button>
+              </div>
+            </Modal>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {settingsOpen && (
+            <Modal>
+              <ModalHeader title={t.settingsTitle} subtitle={t.language} onClose={() => setSettingsOpen(false)} />
+              <Dropdown
+                label={t.language}
+                valueTitle={languages.find((item) => item.code === language)?.name || "English"}
+                valueDescription={t.settings}
+                isOpen={languageMenuOpen}
+                onToggle={() => setLanguageMenuOpen((value) => !value)}
+              >
+                {languages.map((item) => (
+                  <button
+                    key={item.code}
+                    type="button"
+                    onClick={() => {
+                      setLanguage(item.code);
+                      setMessage(text[item.code].ready);
+                      setLanguageMenuOpen(false);
+                    }}
+                    className={`w-full rounded-xl px-3 py-2 text-left text-sm transition ${language === item.code ? "bg-violet-50 text-violet-700" : "hover:bg-neutral-100"}`}
+                  >
+                    {item.name}
+                  </button>
+                ))}
+              </Dropdown>
+            </Modal>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {accountActionOpen && (
+            <Modal>
+              <ModalHeader
+                title={accountAction === "name" ? t.changeName : accountAction === "email" ? t.changeEmail : t.changePassword}
+                subtitle={t.confirmationEmail}
+                onClose={() => setAccountActionOpen(false)}
+              />
+
+              {accountAction !== "password" && (
+                <input
+                  value={accountActionValue}
+                  onChange={(event) => setAccountActionValue(event.target.value)}
+                  className={`mb-3 w-full rounded-2xl border p-3 text-sm outline-none ${theme.input}`}
+                  placeholder={accountAction === "name" ? t.name : t.email}
+                  type={accountAction === "email" ? "email" : "text"}
+                />
+              )}
+
+              <Button className="w-full rounded-full py-5" onClick={handleAccountAction}>
+                {accountAction === "password" ? t.confirmationEmail : t.verify}
+              </Button>
+            </Modal>
+          )}
+        </AnimatePresence>
+      </div>
+    </main>
+  );
+}
